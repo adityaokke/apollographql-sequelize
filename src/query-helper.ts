@@ -1,5 +1,5 @@
 import { GraphqlOutput } from './resolver-helper';
-import { ModelDefined, IncludeOptions, FindAttributeOptions, ThroughOptions } from 'sequelize';
+import { ModelDefined, IncludeOptions, FindAttributeOptions } from 'sequelize';
 
 export function getValidAttributes(
   model: ModelDefined<any, any>,
@@ -46,17 +46,13 @@ export function associationToInclude(
         includeItem.attributes = getValidAttributes(associationModel, outputAttrs);
       }
       // apply "args" alias for arguments
-      const { where, required, through, separate } = outputAssociation[associationEntity];
+      const { where, required, separate } = outputAssociation[associationEntity];
       // only apply "eq" condition on table attribute
       if (where) {
         includeItem.where = where;
       }
       if (typeof required === 'boolean') {
         includeItem.required = required;
-      }
-      if (through) {
-        const throughOpt: unknown = through as unknown;
-        includeItem.through = throughOpt as ThroughOptions;
       }
       if ((typeof separate === 'boolean' && !separate) || separate === undefined) {
         include.push(includeItem);

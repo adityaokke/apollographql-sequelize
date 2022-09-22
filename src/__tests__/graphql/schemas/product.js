@@ -8,7 +8,7 @@ const typeDef = gql`
   type Product {
     name: String
     price: Float
-    Cart(through: Boolean): Cart
+    Cart: Cart
   }
 
   input InputProduct {

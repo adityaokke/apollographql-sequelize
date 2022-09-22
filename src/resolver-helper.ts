@@ -11,15 +11,11 @@ export interface GraphqlOutput {
   union?: {
     [key: string]: GraphqlOutput;
   };
-  through?: GraphqlOutput;
   where?: ObjectParsed;
   required?: graphqlValue;
   separate?: graphqlValue;
 }
 
-interface ThroughModels {
-  [key: string | symbol]: GraphqlOutput;
-}
 
 interface ObjectParsed {
   [key: string | symbol]: graphqlValue;
@@ -101,7 +97,6 @@ function parseArgumentNodeObject(objectValue: ObjectValueNode, info: GraphQLReso
 }
 
 export function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
-  const throughModels: ThroughModels = {};
   const getSubOutput = (selectionNodes: ReadonlyArray<SelectionNode>, parentModelName = ''): GraphqlOutput => {
     const attr: GraphqlOutput = {};
     let dataSelections = null;
@@ -124,7 +119,6 @@ export function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
           let whereParsed: ObjectParsed = {};
           let required: graphqlValue, separate: graphqlValue;
           const args: ObjectParsed = {};
-          let isThroughModel = false;
           nameValue = selectionNode.name.value;
           if (selectionNode.arguments?.length) {
             selectionNode.arguments.forEach((argumentNode) => {
@@ -135,10 +129,7 @@ export function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
                 required = nodeValue;
               } else if (argumentNode.name.value === 'separate') {
                 separate = nodeValue;
-              } else if (argumentNode.name.value === 'through' && (nodeValue as boolean)) {
-                isThroughModel = true;
-                throughModels[parentModelName] = getSubOutput(selectionNode.selectionSet?.selections || []);
-              } else {
+              }else {
                 args[argumentNode.name.value] = nodeValue;
               }
             });
@@ -146,58 +137,41 @@ export function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
           if (selectionNode.name.value === 'rows') {
             dataSelections = selectionNode.selectionSet?.selections;
           }
-          // disable association crawl on through
-          if (isThroughModel) {
-            if (Object.keys(whereParsed).length) {
-              throughModels[parentModelName].where = whereParsed;
-            }
-          } else {
-            if (attr.associations === undefined) {
-              attr.associations = {};
-            }
-            attr.associations[nameValue] = getSubOutput(selectionNode.selectionSet?.selections || [], nameValue);
-            const { union } = attr.associations[nameValue];
-            if (union !== undefined && Object.keys(union).length) {
-              Object.keys(union).forEach((key) => {
-                if (attr.associations === undefined) {
-                  attr.associations = {};
-                }
-                attr.associations[key] = union[key];
-                if (throughModels[key] !== undefined) {
-                  attr.associations[key].through = throughModels[key];
-                }
-                const typeName = singularize(capitalize(key));
-                const argsUnion = args[typeName];
-                if (argsUnion) {
-                  if ((argsUnion as ObjectParsed).where) {
-                    attr.associations[key].where = (argsUnion as ObjectParsed).where as ObjectParsed;
-                  }
-                  if (typeof (argsUnion as ObjectParsed).require === 'boolean') {
-                    attr.associations[key].required = (argsUnion as ObjectParsed).required;
-                  }
-                }
-                if (typeof separate === 'boolean') {
-                  attr.associations[key].separate = separate;
-                }
-              });
-            } else {
-              if (Object.keys(whereParsed).length) {
-                attr.associations[nameValue].where = whereParsed;
+          if (attr.associations === undefined) {
+            attr.associations = {};
+          }
+          attr.associations[nameValue] = getSubOutput(selectionNode.selectionSet?.selections || [], nameValue);
+          const { union } = attr.associations[nameValue];
+          if (union !== undefined && Object.keys(union).length) {
+            Object.keys(union).forEach((key) => {
+              if (attr.associations === undefined) {
+                attr.associations = {};
               }
-              if (typeof required === 'boolean') {
-                attr.associations[nameValue].required = required;
+              attr.associations[key] = union[key];
+              const typeName = singularize(capitalize(key));
+              const argsUnion = args[typeName];
+              if (argsUnion) {
+                if ((argsUnion as ObjectParsed).where) {
+                  attr.associations[key].where = (argsUnion as ObjectParsed).where as ObjectParsed;
+                }
+                if (typeof (argsUnion as ObjectParsed).require === 'boolean') {
+                  attr.associations[key].required = (argsUnion as ObjectParsed).required;
+                }
               }
               if (typeof separate === 'boolean') {
-                attr.associations[nameValue].separate = separate;
+                attr.associations[key].separate = separate;
               }
+            });
+          } else {
+            if (Object.keys(whereParsed).length) {
+              attr.associations[nameValue].where = whereParsed;
             }
-          }
-        }
-        if (throughModels[nameValue] !== undefined) {
-          if (attr.associations !== undefined && attr.associations[nameValue]) {
-            attr.associations[nameValue].through = throughModels[nameValue];
-          } else if (attr.union !== undefined && attr.union[nameValue]) {
-            attr.union[nameValue].through = throughModels[nameValue];
+            if (typeof required === 'boolean') {
+              attr.associations[nameValue].required = required;
+            }
+            if (typeof separate === 'boolean') {
+              attr.associations[nameValue].separate = separate;
+            }
           }
         }
       } else if (selectionNode.kind == Kind.FIELD) {

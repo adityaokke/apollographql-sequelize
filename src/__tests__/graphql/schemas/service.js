@@ -4,7 +4,7 @@ const typeDef = gql`
   type Service {
     name: String
     price: Float
-    Cart(through: Boolean): Cart
+    Cart: Cart
   }
 
   input InputService {
