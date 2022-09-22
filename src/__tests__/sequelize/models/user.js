@@ -1,7 +1,5 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     /**
@@ -15,10 +13,10 @@ module.exports = (sequelize, DataTypes) => {
           model: models.Cart,
           unique: false,
           scope: {
-            item_type: "PRODUCT",
+            item_type: 'PRODUCT',
           },
         },
-        foreignKey: "item_id",
+        foreignKey: 'item_id',
         constraints: false,
       });
       models.User.belongsToMany(models.Service, {
@@ -26,25 +24,28 @@ module.exports = (sequelize, DataTypes) => {
           model: models.Cart,
           unique: false,
           scope: {
-            item_type: "SERVICE",
+            item_type: 'SERVICE',
           },
         },
-        foreignKey: "item_id",
+        foreignKey: 'item_id',
         constraints: false,
       });
-      models.User.hasMany(models.Cart, { foreignKey: "user_id" });
+      models.User.hasMany(models.Cart, { foreignKey: 'user_id' });
     }
   }
-  User.init({
-    firstName: DataTypes.STRING,
-    lastName: DataTypes.STRING,
-    email: DataTypes.STRING,
-    userName: DataTypes.STRING,
-    password: DataTypes.STRING,
-    age: DataTypes.INTEGER
-  }, {
-    sequelize,
-    modelName: 'User',
-  });
+  User.init(
+    {
+      firstName: DataTypes.STRING,
+      lastName: DataTypes.STRING,
+      email: DataTypes.STRING,
+      userName: DataTypes.STRING,
+      password: DataTypes.STRING,
+      age: DataTypes.INTEGER,
+    },
+    {
+      sequelize,
+      modelName: 'User',
+    },
+  );
   return User;
 };

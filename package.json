@@ -1,6 +1,6 @@
 {
   "name": "apollographql-sequelize",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "translate graphql in apollo to readable sequelize object",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

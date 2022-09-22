@@ -1,4 +1,10 @@
-const { GetOutput, AssociationToInclude, GetValidAttributes, ParseResolverArgsOrder, ParseResolverArgsWhere } = require('../../../lib/index');
+const {
+  GetOutput,
+  AssociationToInclude,
+  GetValidAttributes,
+  ParseResolverArgsOrder,
+  ParseResolverArgsWhere,
+} = require('../../../lib/index');
 
 module.exports = {
   getOptions(model, args, info) {
@@ -18,6 +24,6 @@ module.exports = {
       opt.offset = (args.page - 1) * args.pageSize;
       opt.limit = args.pageSize;
     }
-    return opt
+    return opt;
   },
 };

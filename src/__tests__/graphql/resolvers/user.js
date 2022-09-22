@@ -4,18 +4,17 @@ const resolvers = {
   User: {
     CartItems(parent, args) {
       let returnArray = parent.Products || [];
-      returnArray = returnArray
-        .concat(parent.Services || [])
+      returnArray = returnArray.concat(parent.Services || []);
       return returnArray;
     },
   },
   UnionCartItem: {
     __resolveType(parent, ctx, info) {
-      if (parent.Cart.item_type === "PRODUCT") {
-        return "Product";
-      } 
-      if (parent.Cart.item_type === "SERVICE") {
-        return "Service";
+      if (parent.Cart.item_type === 'PRODUCT') {
+        return 'Product';
+      }
+      if (parent.Cart.item_type === 'SERVICE') {
+        return 'Service';
       }
     },
   },

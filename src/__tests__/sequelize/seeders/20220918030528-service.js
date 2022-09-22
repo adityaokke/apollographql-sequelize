@@ -13,13 +13,13 @@ items.push({
   updatedAt: new Date(),
 });
 module.exports = {
-  async up (queryInterface, Sequelize) {
+  async up(queryInterface, Sequelize) {
     return queryInterface.bulkInsert('Services', items, {});
   },
 
-  async down (queryInterface, Sequelize) {
+  async down(queryInterface, Sequelize) {
     return queryInterface.bulkDelete('Services', null, {}).then(() => {
-      return queryInterface.sequelize.query("ALTER TABLE `Services` auto_increment = 1");
-    })
-  }
+      return queryInterface.sequelize.query('ALTER TABLE `Services` auto_increment = 1');
+    });
+  },
 };
