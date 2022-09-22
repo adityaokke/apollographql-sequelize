@@ -16,7 +16,6 @@ export interface GraphqlOutput {
   separate?: graphqlValue;
 }
 
-
 interface ObjectParsed {
   [key: string | symbol]: graphqlValue;
 }
@@ -85,7 +84,7 @@ function parseArgumentNodeObject(objectValue: ObjectValueNode, info: GraphQLReso
   const { fields } = objectValue;
   const objectParsed: ObjectParsed = {};
   fields.forEach((field) => {
-    let fieldName = field.name.value;
+    const fieldName = field.name.value;
     const SeqOp = Op[fieldName as keyof typeof Op];
     if (SeqOp) {
       objectParsed[SeqOp] = parseArgumentNodeValue(field.value, info);
@@ -102,11 +101,11 @@ export function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
     let dataSelections = null;
     selectionNodes.forEach((selectionNode) => {
       if (
-        (selectionNode.kind == Kind.INLINE_FRAGMENT || selectionNode.kind == Kind.FIELD) &&
+        (selectionNode.kind === Kind.INLINE_FRAGMENT || selectionNode.kind === Kind.FIELD) &&
         selectionNode.selectionSet
       ) {
         let nameValue = '';
-        if (selectionNode.kind == Kind.INLINE_FRAGMENT) {
+        if (selectionNode.kind === Kind.INLINE_FRAGMENT) {
           if (attr.union === undefined) {
             attr.union = {};
           }
@@ -117,7 +116,8 @@ export function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
           attr.union[nameValue] = getSubOutput(selectionNode.selectionSet.selections, nameValue);
         } else {
           let whereParsed: ObjectParsed = {};
-          let required: graphqlValue, separate: graphqlValue;
+          let required: graphqlValue;
+          let separate: graphqlValue;
           const args: ObjectParsed = {};
           nameValue = selectionNode.name.value;
           if (selectionNode.arguments?.length) {
@@ -129,7 +129,7 @@ export function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
                 required = nodeValue;
               } else if (argumentNode.name.value === 'separate') {
                 separate = nodeValue;
-              }else {
+              } else {
                 args[argumentNode.name.value] = nodeValue;
               }
             });
@@ -174,7 +174,7 @@ export function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
             }
           }
         }
-      } else if (selectionNode.kind == Kind.FIELD) {
+      } else if (selectionNode.kind === Kind.FIELD) {
         if (attr.attributes === undefined) {
           attr.attributes = [];
         }
@@ -202,7 +202,7 @@ function parseOrderAssoc(model: ModelDefined<any, any>, assoc: string[]): sequel
       assocModels = [model.associations[key]];
       if (assoc.length > 1) {
         assoc.shift();
-        let nextAssocs = parseOrderAssoc(model.associations[key].target, assoc);
+        const nextAssocs = parseOrderAssoc(model.associations[key].target, assoc);
         nextAssocs.forEach((nextAssoc) => {
           assocModels.push(nextAssoc);
         });
@@ -224,7 +224,7 @@ function parseOrder(model: ModelDefined<any, any>, value: string): sequelizeOrde
     return [field, order];
   }
   const assoc = fields;
-  let assocModels = parseOrderAssoc(model, assoc);
+  const assocModels = parseOrderAssoc(model, assoc);
   assocModels.push(field);
   assocModels.push(order);
   return [];

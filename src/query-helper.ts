@@ -9,7 +9,7 @@ export function getValidAttributes(
   const returnAttr: FindAttributeOptions = [];
   attributes.forEach((attr) => {
     if (attr !== undefined) {
-      let field = tableAttr[attr].field;
+      const field = tableAttr[attr].field;
       if (field) {
         returnAttr.push(field);
       }
