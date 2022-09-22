@@ -6,6 +6,12 @@ const items = [...Array(100)].map(() => ({
   createdAt: new Date(),
   updatedAt: new Date(),
 }));
+items.push({
+  name: 'always_exist',
+  price: 1000,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+});
 module.exports = {
   async up (queryInterface, Sequelize) {
     return queryInterface.bulkInsert('Services', items, {});

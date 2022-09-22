@@ -1,7 +1,7 @@
 import { GraphqlOutput } from './resolver-helper';
-import { ModelDefined, ModelCtor, Model, IncludeOptions, AssociationOptions, FindAttributeOptions, ThroughOptions } from 'sequelize';
+import { ModelDefined, IncludeOptions, FindAttributeOptions, ThroughOptions } from 'sequelize';
 
-export function validateAttribute(
+export function getValidAttributes(
   model: ModelDefined<any, any>,
   attributes: [(string | undefined)?],
 ): FindAttributeOptions {
@@ -37,24 +37,28 @@ export function associationToInclude(
       if (associationAssociate.isAliased) {
         includeItem.as = associationAssociate.as;
       }
-      includeItem.include = associationToInclude(associationModel, outputAssociation[associationEntity].associations);
-      if (outputAssociation[associationEntity].attributes.length) {
-        includeItem.attributes = validateAttribute(associationModel, outputAssociation[associationEntity].attributes);
+      const outputAssocs = outputAssociation[associationEntity].associations;
+      if (outputAssocs !== undefined) {
+        includeItem.include = associationToInclude(associationModel, outputAssocs);
+      }
+      const outputAttrs = outputAssociation[associationEntity].attributes;
+      if (outputAttrs !== undefined && outputAttrs.length) {
+        includeItem.attributes = getValidAttributes(associationModel, outputAttrs);
       }
       // apply "args" alias for arguments
       const { where, required, through, separate } = outputAssociation[associationEntity];
       // only apply "eq" condition on table attribute
       if (where) {
-        includeItem.where = where
+        includeItem.where = where;
       }
       if (typeof required === 'boolean') {
         includeItem.required = required;
       }
       if (through) {
-        const throughOpt: unknown = through as unknown
+        const throughOpt: unknown = through as unknown;
         includeItem.through = throughOpt as ThroughOptions;
       }
-      if (typeof separate === 'boolean' && !separate) {
+      if ((typeof separate === 'boolean' && !separate) || separate === undefined) {
         include.push(includeItem);
       }
     }

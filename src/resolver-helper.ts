@@ -1,20 +1,20 @@
 import { GraphQLResolveInfo, SelectionNode, Kind, ValueNode, ObjectValueNode } from 'graphql';
 import { pluralize, singularize, capitalize } from 'inflection';
-import { Op } from 'sequelize';
+import { Op, Association, Model, ModelDefined } from 'sequelize';
 
 export interface GraphqlOutput {
-  attributes: [string?];
-  associations: {
+  attributes?: [string?];
+  associations?: {
     [key: string]: GraphqlOutput;
   };
-  arguments: ObjectParsed;
-  union: {
+  arguments?: ObjectParsed;
+  union?: {
     [key: string]: GraphqlOutput;
   };
-  through: GraphqlOutput | undefined;
-  where: ObjectParsed;
-  required: graphqlValue;
-  separate: graphqlValue;
+  through?: GraphqlOutput;
+  where?: ObjectParsed;
+  required?: graphqlValue;
+  separate?: graphqlValue;
 }
 
 interface ThroughModels {
@@ -35,7 +35,12 @@ function parseUnknownVariable(value: unknown): graphqlValue {
   if (typeof value === 'object' && value !== null) {
     const argObj: ObjectParsed = {};
     Object.keys(value).forEach((key) => {
-      argObj[key] = parseUnknownVariable(value[key as keyof typeof value]);
+      const SeqOp = Op[key as keyof typeof Op];
+      if (SeqOp) {
+        argObj[SeqOp] = parseUnknownVariable(value[key as keyof typeof value]);
+      } else {
+        argObj[key] = parseUnknownVariable(value[key as keyof typeof value]);
+      }
     });
     return argObj;
   } else if (Array.isArray(value)) {
@@ -46,6 +51,8 @@ function parseUnknownVariable(value: unknown): graphqlValue {
   } else if (typeof value === undefined) {
     return undefined;
   } else if (typeof value === 'boolean') {
+    return value;
+  } else if (typeof value === 'number') {
     return value;
   } else {
     return String(value);
@@ -93,19 +100,10 @@ function parseArgumentNodeObject(objectValue: ObjectValueNode, info: GraphQLReso
   return objectParsed;
 }
 
-export default function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
+export function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
   const throughModels: ThroughModels = {};
   const getSubOutput = (selectionNodes: ReadonlyArray<SelectionNode>, parentModelName = ''): GraphqlOutput => {
-    const attr: GraphqlOutput = {
-      attributes: [],
-      associations: {},
-      arguments: {},
-      union: {},
-      through: undefined,
-      where: {},
-      required: undefined,
-      separate: undefined,
-    };
+    const attr: GraphqlOutput = {};
     let dataSelections = null;
     selectionNodes.forEach((selectionNode) => {
       if (
@@ -114,7 +112,10 @@ export default function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
       ) {
         let nameValue = '';
         if (selectionNode.kind == Kind.INLINE_FRAGMENT) {
-          nameValue = selectionNode.typeCondition?.name.value.toLowerCase() || '';
+          if (attr.union === undefined) {
+            attr.union = {};
+          }
+          nameValue = selectionNode.typeCondition?.name.value || '';
           if (parentModelName && isPluralized(parentModelName)) {
             nameValue = pluralize(nameValue);
           }
@@ -127,21 +128,18 @@ export default function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
           nameValue = selectionNode.name.value;
           if (selectionNode.arguments?.length) {
             selectionNode.arguments.forEach((argumentNode) => {
+              const nodeValue = parseArgumentNodeValue(argumentNode.value, info);
               if (argumentNode.name.value === 'where' && argumentNode.value.kind === Kind.OBJECT) {
-                whereParsed = parseArgumentNodeObject(argumentNode.value, info);
+                whereParsed = nodeValue as ObjectParsed;
               } else if (argumentNode.name.value === 'required') {
-                required = parseArgumentNodeValue(argumentNode.value, info);
+                required = nodeValue;
               } else if (argumentNode.name.value === 'separate') {
-                separate = parseArgumentNodeValue(argumentNode.value, info);
-              } else if (
-                argumentNode.name.value === 'through' &&
-                argumentNode.value.kind === Kind.BOOLEAN &&
-                argumentNode.value.value
-              ) {
+                separate = nodeValue;
+              } else if (argumentNode.name.value === 'through' && (nodeValue as boolean)) {
                 isThroughModel = true;
                 throughModels[parentModelName] = getSubOutput(selectionNode.selectionSet?.selections || []);
               } else {
-                args[argumentNode.name.value] = parseArgumentNodeValue(argumentNode.value, info);
+                args[argumentNode.name.value] = nodeValue;
               }
             });
           }
@@ -149,11 +147,21 @@ export default function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
             dataSelections = selectionNode.selectionSet?.selections;
           }
           // disable association crawl on through
-          if (!isThroughModel) {
+          if (isThroughModel) {
+            if (Object.keys(whereParsed).length) {
+              throughModels[parentModelName].where = whereParsed;
+            }
+          } else {
+            if (attr.associations === undefined) {
+              attr.associations = {};
+            }
             attr.associations[nameValue] = getSubOutput(selectionNode.selectionSet?.selections || [], nameValue);
-            if (Object.keys(attr.associations[nameValue].union).length) {
-              const { union } = attr.associations[nameValue];
+            const { union } = attr.associations[nameValue];
+            if (union !== undefined && Object.keys(union).length) {
               Object.keys(union).forEach((key) => {
+                if (attr.associations === undefined) {
+                  attr.associations = {};
+                }
                 attr.associations[key] = union[key];
                 if (throughModels[key] !== undefined) {
                   attr.associations[key].through = throughModels[key];
@@ -183,20 +191,19 @@ export default function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
                 attr.associations[nameValue].separate = separate;
               }
             }
-          } else {
-            if (Object.keys(whereParsed).length) {
-              throughModels[parentModelName].where = whereParsed;
-            }
           }
         }
         if (throughModels[nameValue] !== undefined) {
-          if (attr.associations[nameValue]) {
+          if (attr.associations !== undefined && attr.associations[nameValue]) {
             attr.associations[nameValue].through = throughModels[nameValue];
-          } else if (attr.union[nameValue]) {
+          } else if (attr.union !== undefined && attr.union[nameValue]) {
             attr.union[nameValue].through = throughModels[nameValue];
           }
         }
       } else if (selectionNode.kind == Kind.FIELD) {
+        if (attr.attributes === undefined) {
+          attr.attributes = [];
+        }
         attr.attributes.push(selectionNode.name.value);
       }
     });
@@ -208,4 +215,56 @@ export default function getOutput(info: GraphQLResolveInfo): GraphqlOutput {
   };
   const selectionSet = info.fieldNodes[0].selectionSet;
   return getSubOutput((selectionSet && selectionSet.selections) || []);
+}
+
+export function parseResolverArgsWhere(value: unknown): graphqlValue {
+  return parseUnknownVariable(value);
+}
+
+function parseOrderAssoc(model: ModelDefined<any, any>, assoc: string[]): sequelizeOrder {
+  let assocModels: sequelizeOrder = [model];
+  Object.keys(model.associations).forEach((key) => {
+    if (key.toUpperCase() === assoc[0]) {
+      assocModels = [model.associations[key]];
+      if (assoc.length > 1) {
+        assoc.shift();
+        let nextAssocs = parseOrderAssoc(model.associations[key].target, assoc);
+        nextAssocs.forEach((nextAssoc) => {
+          assocModels.push(nextAssoc);
+        });
+      }
+    }
+  });
+  return assocModels;
+}
+
+function parseOrder(model: ModelDefined<any, any>, value: string): sequelizeOrder {
+  let fields = value.split('_');
+  const order = fields.pop();
+  if (order === undefined) return [];
+  if (!fields.length) return [];
+  fields = fields.join('_').split('__');
+  const field = fields.pop();
+  if (field === undefined) return [];
+  if (fields.length === 0) {
+    return [field, order];
+  }
+  const assoc = fields;
+  let assocModels = parseOrderAssoc(model, assoc);
+  assocModels.push(field);
+  assocModels.push(order);
+  return [];
+}
+
+type sequelizeOrder = (string | Association<Model<any, any>, Model<any, any>> | ModelDefined<any, any>)[];
+export function parseResolverArgsOrder(model: ModelDefined<any, any>, values: string | string[]): sequelizeOrder[] {
+  const orderByReturn: sequelizeOrder[] = [];
+  if (typeof values === 'string') {
+    orderByReturn.push(parseOrder(model, values));
+  } else {
+    values.forEach((value) => {
+      orderByReturn.push(parseOrder(model, value));
+    });
+  }
+  return orderByReturn;
 }
