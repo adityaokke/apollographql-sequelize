@@ -13,7 +13,7 @@ module.exports = {
       opt.where = ParseResolverArgsWhere(args.where);
     }
     if (args.order) {
-      opt.order = ParseResolverArgsOrder(args.order);
+      opt.order = ParseResolverArgsOrder(model, args.order);
     }
     const output = GetOutput(info);
     opt.attributes = GetValidAttributes(model, output.attributes);

@@ -70,7 +70,7 @@ describe('graphql arguments', () => {
       const result = await graphql({ query, variables });
       const compare = await findAll('User', { attributes: ['firstName'], where: { age: { [Op.eq]: 20 } } });
       expect(result.data.users).toEqual(
-        compare.map((item: any) => {
+        compare.map((item) => {
           // Carts will be loaded in separate way (i.e: using dataloader)
           item.Carts = null;
           return item;
@@ -106,6 +106,52 @@ describe('graphql arguments', () => {
             attributes: ['user_id', 'item_type', 'item_id'],
           },
         ],
+      });
+      expect(result.data.users).toEqual(compare);
+    });
+  });
+  describe('order', () => {
+    test('1 field', async () => {
+      const query = `
+        query users($order: [OrderUser]) {
+          users(order: $order) {
+            firstName
+            age
+          }
+        }
+      `;
+      const variables = {
+        order: ["AGE_DESC"],
+      };
+      const result = await graphql({ query, variables });
+      const compare = await findAll('User', {
+        attributes: ['firstName', 'age'],
+        order: [
+          ['age', 'DESC'],
+        ] 
+      });
+      expect(result.data.users).toEqual(compare);
+    });
+    test('2 field', async () => {
+      const query = `
+        query users($order: [OrderUser]) {
+          users(order: $order) {
+            firstName
+            email
+            age
+          }
+        }
+      `;
+      const variables = {
+        order: ["AGE_ASC", "EMAIL_DESC"],
+      };
+      const result = await graphql({ query, variables });
+      const compare = await findAll('User', {
+        attributes: ['firstName', 'email', 'age'],
+        order: [
+          ['age', 'ASC'],
+          ['email', 'DESC'],
+        ] 
       });
       expect(result.data.users).toEqual(compare);
     });
@@ -258,14 +304,14 @@ describe('graphql association', () => {
       where: { age: { [Op.eq]: 20 } },
     });
     expect(result.data.users).toEqual(
-      compare.map((item: any) => {
-        let CartItems = item.Products.map((product: any) => {
+      compare.map((item) => {
+        let CartItems = item.Products.map((product) => {
           return {
             __typename: 'Product',
             name: product.name,
           };
         });
-        const services = item.Services.map((service: any) => {
+        const services = item.Services.map((service) => {
           return {
             __typename: 'Service',
             name: service.name,

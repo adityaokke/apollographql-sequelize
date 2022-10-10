@@ -1,7 +1,7 @@
 const { gql } = require('apollo-server-express');
 const typeDef = gql`
   extend type Query {
-    users(page: Int, pageSize: Int, where: WhereUser): [User]
+    users(page: Int, pageSize: Int, where: WhereUser, order: [OrderUser]): [User]
   }
   union UnionCartItem = Product | Service
   # User type defines the queryable fields for every user in our data source.
@@ -28,6 +28,13 @@ const typeDef = gql`
 
   input WhereUser {
     age: SeqOpInt
+  }
+
+  enum OrderUser{
+    AGE_ASC
+    AGE_DESC
+    EMAIL_ASC
+    EMAIL_DESC
   }
 `;
 

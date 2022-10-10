@@ -61,5 +61,9 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 Please make sure to update tests as appropriate.
 
+## Reference
+[https://itnext.io/step-by-step-building-and-publishing-an-npm-typescript-package-44fe7164964c](https://itnext.io/step-by-step-building-and-publishing-an-npm-typescript-package-44fe7164964c)
+[https://levelup.gitconnected.com/getting-started-with-sequelize-cli-using-faker-824b3f4c4cfe](https://levelup.gitconnected.com/getting-started-with-sequelize-cli-using-faker-824b3f4c4cfe)
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
