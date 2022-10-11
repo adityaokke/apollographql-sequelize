@@ -70,7 +70,7 @@ describe('graphql arguments', () => {
       const result = await graphql({ query, variables });
       const compare = await findAll('User', { attributes: ['firstName'], where: { age: { [Op.eq]: 20 } } });
       expect(result.data.users).toEqual(
-        compare.map((item:any) => {
+        compare.map((item: any) => {
           // Carts will be loaded in separate way (i.e: using dataloader)
           item.Carts = null;
           return item;
@@ -121,14 +121,12 @@ describe('graphql arguments', () => {
         }
       `;
       const variables = {
-        order: ["AGE_DESC"],
+        order: ['AGE_DESC'],
       };
       const result = await graphql({ query, variables });
       const compare = await findAll('User', {
         attributes: ['firstName', 'age'],
-        order: [
-          ['age', 'DESC'],
-        ] 
+        order: [['age', 'DESC']],
       });
       expect(result.data.users).toEqual(compare);
     });
@@ -143,7 +141,7 @@ describe('graphql arguments', () => {
         }
       `;
       const variables = {
-        order: ["AGE_ASC", "EMAIL_DESC"],
+        order: ['AGE_ASC', 'EMAIL_DESC'],
       };
       const result = await graphql({ query, variables });
       const compare = await findAll('User', {
@@ -151,7 +149,7 @@ describe('graphql arguments', () => {
         order: [
           ['age', 'ASC'],
           ['email', 'DESC'],
-        ] 
+        ],
       });
       expect(result.data.users).toEqual(compare);
     });

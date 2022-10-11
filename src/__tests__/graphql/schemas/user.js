@@ -30,7 +30,7 @@ const typeDef = gql`
     age: SeqOpInt
   }
 
-  enum OrderUser{
+  enum OrderUser {
     AGE_ASC
     AGE_DESC
     EMAIL_ASC
