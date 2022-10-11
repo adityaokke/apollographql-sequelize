@@ -70,7 +70,7 @@ describe('graphql arguments', () => {
       const result = await graphql({ query, variables });
       const compare = await findAll('User', { attributes: ['firstName'], where: { age: { [Op.eq]: 20 } } });
       expect(result.data.users).toEqual(
-        compare.map((item) => {
+        compare.map((item:any) => {
           // Carts will be loaded in separate way (i.e: using dataloader)
           item.Carts = null;
           return item;
@@ -111,7 +111,7 @@ describe('graphql arguments', () => {
     });
   });
   describe('order', () => {
-    test('1 field', async () => {
+    test('single field', async () => {
       const query = `
         query users($order: [OrderUser]) {
           users(order: $order) {
@@ -132,7 +132,7 @@ describe('graphql arguments', () => {
       });
       expect(result.data.users).toEqual(compare);
     });
-    test('2 field', async () => {
+    test('multiple field', async () => {
       const query = `
         query users($order: [OrderUser]) {
           users(order: $order) {
@@ -304,14 +304,14 @@ describe('graphql association', () => {
       where: { age: { [Op.eq]: 20 } },
     });
     expect(result.data.users).toEqual(
-      compare.map((item) => {
-        let CartItems = item.Products.map((product) => {
+      compare.map((item: any) => {
+        let CartItems = item.Products.map((product: any) => {
           return {
             __typename: 'Product',
             name: product.name,
           };
         });
-        const services = item.Services.map((service) => {
+        const services = item.Services.map((service: any) => {
           return {
             __typename: 'Service',
             name: service.name,
