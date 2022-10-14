@@ -30,7 +30,7 @@
     "sequelize"
   ],
   "author": "Aditya Okke Sugiarso <adityaokke@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/dtokke/apollographql-sequelize/issues"
   },
