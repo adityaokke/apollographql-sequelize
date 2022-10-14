@@ -46,7 +46,7 @@ query users($where: WhereUser, $order: [OrderUser], $cartsWhere2: WhereCart) {
 then on resolver use this code as a sample
 ```javascript
 # resolver
-const { GetOutput, AssociationToInclude, GetValidAttributes, ParseResolverArgsOrder, ParseResolverArgsWhere } = require('../../../lib/index');
+const { GetOutput, AssociationToInclude, GetValidAttributes, ParseResolverArgsOrder, ParseResolverArgsWhere } = require('apollographql-sequelize');
 
 sampleQuery(parent, args, context, info) {
     const opt = {};
