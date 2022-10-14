@@ -13,11 +13,11 @@ npm i apollographql-sequelize
 schema sample (more schema sample on [test file](https://github.com/adityaokke/apollographql-sequelize/blob/main/src/__tests__/resolver-helper.test.ts))
 ```javascript
 #has many
-query users($where: WhereUser) {
-  users(where: $where) {
+query users($where: WhereUser, $order: [OrderUser], $cartsWhere2: WhereCart) {
+  users(where: $where, order: $order) {
     firstName
     age
-    Carts {
+    Carts (where: $cartsWhere2) {
       user_id
       item_type
       item_id
@@ -29,6 +29,15 @@ query users($where: WhereUser) {
   "where": {
     "age": {
       "eq": 20
+    }
+  },
+  "order": [
+    "AGE_ASC",
+    "CARTS__ITEM_ID_DESC"
+  ],
+  "cartsWhere2": {
+    "item_type": {
+      "eq": "PRODUCT"
     }
   }
 }
@@ -45,7 +54,7 @@ sampleQuery(parent, args, context, info) {
       opt.where = ParseResolverArgsWhere(args.where);
     }
     if (args.order) {
-      opt.order = ParseResolverArgsOrder(args.order);
+      opt.order = ParseResolverArgsOrder(model, args.order);
     }
     const output = GetOutput(info);
     opt.attributes = GetValidAttributes(model, output.attributes);

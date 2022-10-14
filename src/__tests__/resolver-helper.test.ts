@@ -153,6 +153,37 @@ describe('graphql arguments', () => {
       });
       expect(result.data.users).toEqual(compare);
     });
+    test('nested field', async () => {
+      const query = `
+        query users($order: [OrderUser]) {
+          users(order: $order) {
+            firstName
+            email
+            age
+            Carts {
+              user_id
+              item_type
+              item_id
+            }
+          }
+        }
+      `;
+      const variables = {
+        order: ['CARTS__ITEM_ID_DESC'],
+      };
+      const result = await graphql({ query, variables });
+      const compare = await findAll('User', {
+        attributes: ['firstName', 'email', 'age'],
+        order: [[models.User.associations.Carts, 'item_id', 'DESC']],
+        include: [
+          {
+            model: models.Cart,
+            attributes: ['user_id', 'item_type', 'item_id'],
+          },
+        ],
+      });
+      expect(result.data.users).toEqual(compare);
+    });
   });
 });
 

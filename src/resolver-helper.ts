@@ -227,7 +227,7 @@ function parseOrder(model: ModelDefined<any, any>, value: string): sequelizeOrde
   const assocModels = parseOrderAssoc(model, assoc);
   assocModels.push(field);
   assocModels.push(order);
-  return [];
+  return assocModels;
 }
 
 type sequelizeOrder = (string | Association<Model<any, any>, Model<any, any>> | ModelDefined<any, any>)[];

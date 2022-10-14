@@ -13,7 +13,7 @@ const typeDef = gql`
     password: String
     age: Int
     Products: [Product]
-    Carts(separate: Boolean, required: Boolean): [Cart]
+    Carts(separate: Boolean, required: Boolean, where: WhereCart): [Cart]
     CartItems: [UnionCartItem]
   }
 
@@ -35,6 +35,8 @@ const typeDef = gql`
     AGE_DESC
     EMAIL_ASC
     EMAIL_DESC
+    CARTS__ITEM_ID_ASC
+    CARTS__ITEM_ID_DESC
   }
 `;
 

@@ -19,6 +19,17 @@ const typeDef = gql`
 
   input WhereCart {
     user_id: SeqOpInt
+    item_type: SeqOpCartItem_type
+  }
+  
+  input SeqOpCartItem_type {
+    in: [CartItem_type]
+    eq: CartItem_type
+  }
+
+  enum CartItem_type {
+    PRODUCT
+    SERVICE
   }
 `;
 module.exports = typeDef;
