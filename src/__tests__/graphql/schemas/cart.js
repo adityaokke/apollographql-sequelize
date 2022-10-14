@@ -21,7 +21,7 @@ const typeDef = gql`
     user_id: SeqOpInt
     item_type: SeqOpCartItem_type
   }
-  
+
   input SeqOpCartItem_type {
     in: [CartItem_type]
     eq: CartItem_type
